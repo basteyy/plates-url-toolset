@@ -1,0 +1,21 @@
+{
+  "name": "basteyy/plates-url-toolset",
+  "description": "A few functions for url handling in plates",
+  "type": "plugin",
+  "keywords": [],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Sebastian Eiweleit",
+      "email": "sebastian@eiweleit.de"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "basteyy\\PlatesUrlToolset\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}
