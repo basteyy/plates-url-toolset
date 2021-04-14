@@ -14,10 +14,16 @@ class PlatesUrlToolset implements ExtensionInterface
      * @var string Protocol of the url
      */
     private string $protocol;
+
     /**
      * @var string Base url
      */
     private $baseUrl;
+
+    /**
+     * @var array|string[] The array for named urls
+     */
+    private array $namedUrl;
 
     /**
      * @var bool Change the behavior of urls, when no concrete definition is parsed from the template
@@ -29,7 +35,7 @@ class PlatesUrlToolset implements ExtensionInterface
      * @param string|null $baseUrl
      * @param bool $defaultAbsoluteUrl
      */
-    public function __construct(string $baseUrl = null, bool $defaultAbsoluteUrl = false)
+    public function __construct(string $baseUrl = null, bool $defaultAbsoluteUrl = false, array $namedLinks = [])
     {
         if (isset($baseUrl)) {
             $urlParts = parse_url($baseUrl);
@@ -40,7 +46,7 @@ class PlatesUrlToolset implements ExtensionInterface
         }
 
         $this->baseUrl = $baseUrl ?? $_SERVER['HTTP_HOST'];
-
+        $this->namedUrl = $namedLinks ?? ['home' => '/'];
         $this->defaultAbsoluteUrl = $defaultAbsoluteUrl;
     }
 
@@ -71,6 +77,104 @@ class PlatesUrlToolset implements ExtensionInterface
         $engine->registerFunction('getAbsoluteUrl', [$this, 'getAbsoluteUrl']);
         $engine->registerFunction('getDebugUrl', [$this, 'getDebugUrl']);
         $engine->registerFunction('getCurrentUrl', [$this, 'getCurrentUrl']);
+        $engine->registerFunction('getNamedUrl', [$this, 'getNamedUrl']);
+        $engine->registerFunction('getNamedLink', [$this, 'getNamedLink']);
+        $engine->registerFunction('addNamedUrl', [$this, 'addNamedUrl']);
+    }
+
+    /**
+     * Add a new named url
+     * @param string $urlName
+     * @param string $url
+     */
+    public function addNamedUrl(string $urlName, string $url): void
+    {
+        $this->namedUrl[$urlName] = $url;
+    }
+
+    /**
+     * Return a named url
+     * @param string $linkName
+     * @param bool|null $absoluteUrl
+     * @return string
+     */
+    public function getNamedUrl(string $linkName, bool $absoluteUrl = null): string
+    {
+        if (isset($this->namedUrl[$linkName])) {
+            return $this->getUrl($this->namedUrl[$linkName], (null === $absoluteUrl && $this->defaultAbsoluteUrl));
+        }
+
+        return $linkName;
+    }
+
+    /**
+     * Process a url
+     * @param string $url
+     * @param bool $absoluteUrl
+     * @return string
+     */
+    protected function getUrl(string $url, bool $absoluteUrl): string
+    {
+        if ($absoluteUrl) {
+            $url = $this->getAbsoluteUrl($url);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Returns a absolute url
+     * @param string $url
+     * @return string
+     */
+    #[Pure] public function getAbsoluteUrl(string $url): string
+    {
+        return $this->protocol . '://' . $this->baseUrl . '/' . ltrim($url, '/');
+    }
+
+    /**
+     * Return a named link
+     * @param string $linkName
+     * @param string|null $value
+     * @param string|null $title
+     * @param string|null $classlist
+     * @param bool|null $absoluteUrl
+     * @return string
+     */
+    public function getNamedLink(string $linkName, string $value = null, string $title = null, string $classlist = null, bool $absoluteUrl = null): string
+    {
+        if (isset($this->namedUrl[$linkName])) {
+            return $this->getLink(
+                $this->namedUrl[$linkName],
+                $value,
+                $title,
+                $classlist,
+                $absoluteUrl
+            );
+        }
+
+        return $linkName;
+    }
+
+    /**
+     * Returns a link in html markup
+     * @param string $url
+     * @param string|null $value
+     * @param string|null $title
+     * @param string|null $classlist
+     * @param bool $absoluteUrl
+     * @return string
+     */
+    #[Pure] public function getLink(string $url, string $value = null, string $title = null, string $classlist = null, bool $absoluteUrl = null): string
+    {
+        $url = $this->getUrl($url, (null === $absoluteUrl && $this->defaultAbsoluteUrl));
+
+        return sprintf('<a href="%1$s" title="%3$s"%4$s>%2$s</a>',
+            $url,
+            $value ?? $url,
+            $title ?? $url,
+            isset($classlist) ? ' class="' . $classlist . '"' : ''
+        );
     }
 
     /**
@@ -92,43 +196,6 @@ class PlatesUrlToolset implements ExtensionInterface
         }
 
         return $url;
-    }
-
-    /**
-     * Returns a absolute url
-     * @param string $url
-     * @return string
-     */
-    #[Pure] public function getAbsoluteUrl(string $url): string
-    {
-        return $this->protocol . '://' . $this->baseUrl . '/' . ltrim($url, '/');
-    }
-
-    /**
-     * Returns a link in html markup
-     * @param string $url
-     * @param string|null $value
-     * @param string|null $title
-     * @param string|null $classlist
-     * @param bool $absoluteUrl
-     * @return string
-     */
-    #[Pure] public function getLink(string $url, string $value = null, string $title = null, string $classlist = null, bool $absoluteUrl = null): string
-    {
-        if (null === $absoluteUrl && $this->defaultAbsoluteUrl) {
-            $absoluteUrl = true;
-        }
-
-        if ($absoluteUrl) {
-            $url = $this->getAbsoluteUrl($url);
-        }
-
-        return sprintf('<a href="%1$s" title="%3$s"%4$s>%2$s</a>',
-            $url,
-            $value ?? $url,
-            $title ?? $url,
-            isset($classlist) ? ' class="' . $classlist . '"' : ''
-        );
     }
 
     /**
