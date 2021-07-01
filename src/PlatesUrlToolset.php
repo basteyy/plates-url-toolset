@@ -77,6 +77,7 @@ class PlatesUrlToolset implements ExtensionInterface
         $engine->registerFunction('getAbsoluteUrl', [$this, 'getAbsoluteUrl']);
         $engine->registerFunction('getDebugUrl', [$this, 'getDebugUrl']);
         $engine->registerFunction('getCurrentUrl', [$this, 'getCurrentUrl']);
+        $engine->registerFunction('getCurrentUrlWithoutQuery', [$this, 'getCurrentUrlWithoutQuery']);
         $engine->registerFunction('getNamedUrl', [$this, 'getNamedUrl']);
         $engine->registerFunction('getNamedLink', [$this, 'getNamedLink']);
         $engine->registerFunction('addNamedUrl', [$this, 'addNamedUrl']);
@@ -199,9 +200,22 @@ class PlatesUrlToolset implements ExtensionInterface
     }
 
     /**
+     * This function returns the current url without the query. You can append a string with the second parameter
+     * @param bool $absoluteUrl
+     * @param string $append
+     * @return string
+     */
+    public function getCurrentUrlWithoutQuery(bool $absoluteUrl = null, string $append = ''): string
+    {
+        return strtok($this->getCurrentUrl($absoluteUrl, $append), '?');
+    }
+
+    /**
      * Use that function for creating debugging urls which show the time con request as a query parameter
      * @param string $url
      * @param bool $absoluteUrl
+     * @param string $queryParameter
+     * @param string|null $queryParameterValue
      * @return string
      */
     public function getDebugUrl(string $url, bool $absoluteUrl = null, string $queryParameter = 'request_time', string $queryParameterValue = null): string
@@ -214,6 +228,6 @@ class PlatesUrlToolset implements ExtensionInterface
             $url = $this->getAbsoluteUrl($url);
         }
 
-        return $url . '?' . $queryParameter . '=' . ($queryParameterValue ? $queryParameterValue : time());
+        return $url . '?' . $queryParameter . '=' . ($queryParameterValue ?? time());
     }
 }
