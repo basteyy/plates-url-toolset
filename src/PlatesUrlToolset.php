@@ -96,13 +96,13 @@ class PlatesUrlToolset implements ExtensionInterface
     /**
      * Return a named url
      * @param string $linkName
-     * @param bool|null $absoluteUrl
+     * @param bool|null $getAbsoluteUrl
      * @return string
      */
-    public function getNamedUrl(string $linkName, bool $absoluteUrl = null): string
+    public function getNamedUrl(string $linkName, bool $getAbsoluteUrl = null): string
     {
         if (isset($this->namedUrl[$linkName])) {
-            return $this->getUrl($this->namedUrl[$linkName], (null === $absoluteUrl && $this->defaultAbsoluteUrl));
+            return $this->getUrl($this->namedUrl[$linkName], (null === $getAbsoluteUrl && $this->defaultAbsoluteUrl));
         }
 
         return $linkName;
@@ -111,16 +111,16 @@ class PlatesUrlToolset implements ExtensionInterface
     /**
      * Process a url
      * @param string $url
-     * @param bool $absoluteUrl
+     * @param bool $getAbsoluteUrl
      * @return string
      */
-    protected function getUrl(string $url, bool $absoluteUrl): string
+    protected function getUrl(string $url, bool $getAbsoluteUrl, ...$args): string
     {
-        if ($absoluteUrl) {
-            $url = $this->getAbsoluteUrl($url);
+        if ($getAbsoluteUrl) {
+            $url = $this->getAbsoluteUrl($url, $args ?? null);
         }
 
-        return $url;
+        return count($args) == 0 ? $url : sprintf($url, ...$args);
     }
 
     /**
@@ -128,9 +128,13 @@ class PlatesUrlToolset implements ExtensionInterface
      * @param string $url
      * @return string
      */
-    #[Pure] public function getAbsoluteUrl(string $url): string
+    #[Pure] public function getAbsoluteUrl(string $url, ...$args): string
     {
-        return $this->protocol . '://' . $this->baseUrl . '/' . ltrim($url, '/');
+        if(count($args) == 0 ) {
+            return $this->protocol . '://' . $this->baseUrl . '/' . ltrim($url, '/');
+        }
+
+        return $this->protocol . '://' . $this->baseUrl . '/' . ltrim(sprintf($url, ...$args), '/');
     }
 
     /**
@@ -139,10 +143,10 @@ class PlatesUrlToolset implements ExtensionInterface
      * @param string|null $value
      * @param string|null $title
      * @param string|null $classlist
-     * @param bool|null $absoluteUrl
+     * @param bool|null $getAbsoluteUrl
      * @return string
      */
-    public function getNamedLink(string $linkName, string $value = null, string $title = null, string $classlist = null, bool $absoluteUrl = null): string
+    public function getNamedLink(string $linkName, string $value = null, string $title = null, string $classlist = null, bool $getAbsoluteUrl = null): string
     {
         if (isset($this->namedUrl[$linkName])) {
             return $this->getLink(
@@ -150,7 +154,7 @@ class PlatesUrlToolset implements ExtensionInterface
                 $value,
                 $title,
                 $classlist,
-                $absoluteUrl
+                $getAbsoluteUrl
             );
         }
 
@@ -163,12 +167,12 @@ class PlatesUrlToolset implements ExtensionInterface
      * @param string|null $value
      * @param string|null $title
      * @param string|null $classlist
-     * @param bool $absoluteUrl
+     * @param bool $getAbsoluteUrl
      * @return string
      */
-    #[Pure] public function getLink(string $url, string $value = null, string $title = null, string $classlist = null, bool $absoluteUrl = null): string
+    #[Pure] public function getLink(string $url, string $value = null, string $title = null, string $classlist = null, bool $getAbsoluteUrl = null): string
     {
-        $url = $this->getUrl($url, (null === $absoluteUrl && $this->defaultAbsoluteUrl));
+        $url = $this->getUrl($url, (null === $getAbsoluteUrl && $this->defaultAbsoluteUrl));
 
         return sprintf('<a href="%1$s" title="%3$s"%4$s>%2$s</a>',
             $url,
@@ -180,19 +184,19 @@ class PlatesUrlToolset implements ExtensionInterface
 
     /**
      * This function returns the current url. You can append a string with the second parameter
-     * @param bool $absoluteUrl
+     * @param bool $getAbsoluteUrl
      * @param string $append
      * @return string
      */
-    public function getCurrentUrl(bool $absoluteUrl = null, string $append = ''): string
+    public function getCurrentUrl(bool $getAbsoluteUrl = null, string $append = ''): string
     {
-        if (null === $absoluteUrl && $this->defaultAbsoluteUrl) {
-            $absoluteUrl = true;
+        if (null === $getAbsoluteUrl && $this->defaultAbsoluteUrl) {
+            $getAbsoluteUrl = true;
         }
 
         $url = $_SERVER['REQUEST_URI'] . str_replace('//', '/', $append);
 
-        if ($absoluteUrl) {
+        if ($getAbsoluteUrl) {
             $url = $this->getAbsoluteUrl($url);
         }
 
@@ -201,30 +205,30 @@ class PlatesUrlToolset implements ExtensionInterface
 
     /**
      * This function returns the current url without the query. You can append a string with the second parameter
-     * @param bool $absoluteUrl
+     * @param bool $getAbsoluteUrl
      * @param string $append
      * @return string
      */
-    public function getCurrentUrlWithoutQuery(bool $absoluteUrl = null, string $append = ''): string
+    public function getCurrentUrlWithoutQuery(bool $getAbsoluteUrl = null, string $append = ''): string
     {
-        return strtok($this->getCurrentUrl($absoluteUrl, $append), '?');
+        return strtok($this->getCurrentUrl($getAbsoluteUrl, $append), '?');
     }
 
     /**
      * Use that function for creating debugging urls which show the time con request as a query parameter
      * @param string $url
-     * @param bool $absoluteUrl
+     * @param bool $getAbsoluteUrl
      * @param string $queryParameter
      * @param string|null $queryParameterValue
      * @return string
      */
-    public function getDebugUrl(string $url, bool $absoluteUrl = null, string $queryParameter = 'request_time', string $queryParameterValue = null): string
+    public function getDebugUrl(string $url, bool $getAbsoluteUrl = null, string $queryParameter = 'request_time', string $queryParameterValue = null): string
     {
-        if (null === $absoluteUrl && $this->defaultAbsoluteUrl) {
-            $absoluteUrl = true;
+        if (null === $getAbsoluteUrl && $this->defaultAbsoluteUrl) {
+            $getAbsoluteUrl = true;
         }
 
-        if ($absoluteUrl) {
+        if ($getAbsoluteUrl) {
             $url = $this->getAbsoluteUrl($url);
         }
 
