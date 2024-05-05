@@ -1,4 +1,9 @@
 <?php
+/**
+ * @author xzit.online <hallo@xzit.email>
+ * @website https://github.com/basteyy
+ * @website https://xzit.online
+ */
 
 declare(strict_types=1);
 
@@ -7,6 +12,7 @@ namespace basteyy\PlatesUrlToolset;
 use JetBrains\PhpStorm\Pure;
 use League\Plates\Engine;
 use League\Plates\Extension\ExtensionInterface;
+use League\Plates\Template\Template;
 
 class PlatesUrlToolset implements ExtensionInterface
 {
@@ -18,7 +24,7 @@ class PlatesUrlToolset implements ExtensionInterface
     /**
      * @var string Base url
      */
-    private $baseUrl;
+    private string $baseUrl;
 
     /**
      * @var array|string[] The array for named urls
@@ -26,16 +32,25 @@ class PlatesUrlToolset implements ExtensionInterface
     private array $namedUrl;
 
     /**
-     * @var bool Change the behavior of urls, when no concrete definition is parsed from the template
+     * @var bool Change the behavior of urls when no concrete definition is parsed from the template
      */
     private bool $defaultAbsoluteUrl;
+
+    /**
+     * @var Template The template
+     */
+    public Template $template;
 
     /**
      * PlatesUrlToolset constructor.
      * @param string|null $baseUrl
      * @param bool $defaultAbsoluteUrl
+     * @param array $namedLinks
      */
-    public function __construct(string $baseUrl = null, bool $defaultAbsoluteUrl = false, array $namedLinks = [])
+    public function __construct(
+        string $baseUrl = null,
+        bool $defaultAbsoluteUrl = false,
+        array $namedLinks = [])
     {
         if (isset($baseUrl)) {
             $urlParts = parse_url($baseUrl);
@@ -71,7 +86,7 @@ class PlatesUrlToolset implements ExtensionInterface
      * Register the functions
      * @param Engine $engine
      */
-    public function register(Engine $engine)
+    public function register(Engine $engine): void
     {
         $engine->registerFunction('getLink', [$this, 'getLink']);
         $engine->registerFunction('getAbsoluteUrl', [$this, 'getAbsoluteUrl']);
@@ -109,9 +124,10 @@ class PlatesUrlToolset implements ExtensionInterface
     }
 
     /**
-     * Process a url
+     * Process an url
      * @param string $url
      * @param bool $getAbsoluteUrl
+     * @param mixed ...$args
      * @return string
      */
     protected function getUrl(string $url, bool $getAbsoluteUrl, ...$args): string
@@ -126,6 +142,7 @@ class PlatesUrlToolset implements ExtensionInterface
     /**
      * Returns a absolute url
      * @param string $url
+     * @param mixed ...$args
      * @return string
      */
     #[Pure] public function getAbsoluteUrl(string $url, ...$args): string
