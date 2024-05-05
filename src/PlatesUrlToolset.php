@@ -96,6 +96,7 @@ class PlatesUrlToolset implements ExtensionInterface
         $engine->registerFunction('getNamedUrl', [$this, 'getNamedUrl']);
         $engine->registerFunction('getNamedLink', [$this, 'getNamedLink']);
         $engine->registerFunction('addNamedUrl', [$this, 'addNamedUrl']);
+        $engine->registerFunction('getCurrentFqdn', [$this, 'getCurrentFqdn']);
     }
 
     /**
@@ -250,5 +251,14 @@ class PlatesUrlToolset implements ExtensionInterface
         }
 
         return $url . '?' . $queryParameter . '=' . ($queryParameterValue ?? time());
+    }
+
+    /**
+     * Get the current FQDN
+     * @return string
+     */
+    public function getCurrentFqdn() : string
+    {
+        return $_SERVER['HTTP_HOST'];
     }
 }
