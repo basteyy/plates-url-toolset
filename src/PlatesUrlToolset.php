@@ -20,6 +20,9 @@ class PlatesUrlToolset implements ExtensionInterface
      * @var string Protocol of the url
      */
     private string $protocol;
+    
+    /** @var Template $template */
+    public Template $template;
 
     /**
      * @var string Base url
