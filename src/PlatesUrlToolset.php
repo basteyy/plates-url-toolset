@@ -17,29 +17,28 @@ use League\Plates\Template\Template;
 class PlatesUrlToolset implements ExtensionInterface
 {
     /**
+     * @var Template The template
+     */
+    public Template $template;
+    /**
      * @var string Protocol of the url
      */
     private string $protocol;
-
     /**
      * @var string Base url
      */
     private string $baseUrl;
 
+    /** @var string $rawBaseUrl Holds the raw baseUrl in case its provided (usefull in CLI-Context)  */
+    private string $rawBaseUrl;
     /**
      * @var array|string[] The array for named urls
      */
     private array $namedUrl;
-
     /**
      * @var bool Change the behavior of urls when no concrete definition is parsed from the template
      */
     private bool $defaultAbsoluteUrl;
-
-    /**
-     * @var Template The template
-     */
-    public Template $template;
 
     /**
      * PlatesUrlToolset constructor.
@@ -49,13 +48,14 @@ class PlatesUrlToolset implements ExtensionInterface
      */
     public function __construct(
         string $baseUrl = null,
-        bool $defaultAbsoluteUrl = false,
-        array $namedLinks = [])
+        bool   $defaultAbsoluteUrl = false,
+        array  $namedLinks = [])
     {
         if (isset($baseUrl)) {
+            $this->rawBaseUrl = $baseUrl;
             $urlParts = parse_url($baseUrl);
             $this->protocol = $urlParts['scheme'] ?? $this->isHttps() ? 'https' : 'http';
-            $baseUrl = rtrim($baseUrl, '/');
+            $baseUrl = rtrim($urlParts['host'], '/');
         } else {
             $this->protocol = $this->isHttps() ? 'https' : 'http';
         }
@@ -71,6 +71,14 @@ class PlatesUrlToolset implements ExtensionInterface
      */
     protected function isHttps(): bool
     {
+        if (PHP_SAPI === 'cli' || empty($_SERVER)) {
+            if (isset($this->rawBaseUrl)) {
+                return strpos($this->rawBaseUrl, 'https://') === 0;
+            }
+
+            return false;
+        }
+
         if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') {
             return true;
         } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') {
@@ -148,7 +156,7 @@ class PlatesUrlToolset implements ExtensionInterface
      */
     #[Pure] public function getAbsoluteUrl(string $url, ...$args): string
     {
-        if(count($args) == 0 ) {
+        if (count($args) == 0) {
             return $this->protocol . '://' . $this->baseUrl . '/' . ltrim($url, '/');
         }
 
@@ -201,6 +209,17 @@ class PlatesUrlToolset implements ExtensionInterface
     }
 
     /**
+     * This function returns the current url without the query. You can append a string with the second parameter
+     * @param bool $getAbsoluteUrl
+     * @param string $append
+     * @return string
+     */
+    public function getCurrentUrlWithoutQuery(bool $getAbsoluteUrl = null, string $append = ''): string
+    {
+        return strtok($this->getCurrentUrl($getAbsoluteUrl, $append), '?');
+    }
+
+    /**
      * This function returns the current url. You can append a string with the second parameter
      * @param bool $getAbsoluteUrl
      * @param string $append
@@ -219,17 +238,6 @@ class PlatesUrlToolset implements ExtensionInterface
         }
 
         return $url;
-    }
-
-    /**
-     * This function returns the current url without the query. You can append a string with the second parameter
-     * @param bool $getAbsoluteUrl
-     * @param string $append
-     * @return string
-     */
-    public function getCurrentUrlWithoutQuery(bool $getAbsoluteUrl = null, string $append = ''): string
-    {
-        return strtok($this->getCurrentUrl($getAbsoluteUrl, $append), '?');
     }
 
     /**
@@ -257,8 +265,13 @@ class PlatesUrlToolset implements ExtensionInterface
      * Get the current FQDN
      * @return string
      */
-    public function getCurrentFqdn() : string
+    public function getCurrentFqdn(): string
     {
-        return $_SERVER['HTTP_HOST'];
+        if (isset($_SERVER['HTTP_HOST'])) {
+            return $_SERVER['HTTP_HOST'];
+        }
+
+        // Fallback auf baseUrl oder WEBSITE_ADDRESS
+        return $this->baseUrl;
     }
 }
