@@ -15,7 +15,7 @@ if (!file_exists($autoload = ROOT . '/vendor/autoload.php')) {
 
 include $autoload;
 
-$engine = new \League\Plates\Engine(ROOT . '/workspace/tpl');
+$engine = new \League\Plates\Engine(ROOT . '/example/tpl');
 
 $url = new \basteyy\PlatesUrlToolset\PlatesUrlToolset();
 $url->addNamedUrl('home', '/home');

@@ -1,8 +1,15 @@
 {
   "name": "basteyy/plates-url-toolset",
-  "description": "A few functions for url handling in plates",
-  "type": "plugin",
-  "keywords": [],
+  "description": "URL helper functions (links, absolute urls, named urls, cache busting) for the Plates template engine",
+  "type": "library",
+  "keywords": [
+    "plates",
+    "league",
+    "template",
+    "url",
+    "link",
+    "extension"
+  ],
   "license": "MIT",
   "authors": [
     {
@@ -15,11 +22,22 @@
       "basteyy\\PlatesUrlToolset\\": "src/"
     }
   },
-  "require-dev": {
-    "phpunit/phpunit": ">=11.1.3",
-    "league/plates": ">=v3.5.0"
+  "autoload-dev": {
+    "psr-4": {
+      "basteyy\\PlatesUrlToolset\\Tests\\": "tests/"
+    }
   },
   "require": {
-    "php": ">=8.0"
+    "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+    "league/plates": "v3.6.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5 || ^12.0"
+  },
+  "scripts": {
+    "test": "phpunit"
+  },
+  "config": {
+    "sort-packages": true
   }
 }
