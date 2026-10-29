@@ -335,6 +335,11 @@ class PlatesUrlToolset implements ExtensionInterface
             }
         }
 
+        // Fallback to the host of the configured base url
+        if (null !== $this->baseUrl) {
+            return strtolower(explode('/', $this->baseUrl, 2)[0]);
+        }
+
         return 'localhost';
     }
 
